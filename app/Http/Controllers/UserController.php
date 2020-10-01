@@ -89,12 +89,20 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        
-		$response = Http::get('https://reqres.in/api/users/' . $id);
+        $UserToBeEdit = Http::get( 'https://reqres.in/api/users/' . $id );
+		
+		if($UserToBeEdit == '{}' ) 
+		{
+            return redirect()->back()->with( 'success', ' No User Found' );
+        } 
+		else 
+		{
+			$response = Http::get('https://reqres.in/api/users/' . $id);
 
-        $user = $response->object()->data;
+			$user = $response->object()->data;
 
-        return view('users.edit', compact('user'));
+			return view('users.edit', compact('user'));
+		}
     }
 
     /**
@@ -112,29 +120,39 @@ class UserController extends Controller
             'last_name' => 'required|string',
             'email' => 'required|email',
         ]);
-
-        $response = Http::put('https://reqres.in/api/users/' . $id, [
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-        ]);
-
-        if($response->successful()) 
-		{
-            $user = $response->object();
-			
-			$response = Http::get('https://reqres.in/api/users/' . $id);
-
-			$user = $response->object()->data;
-
-			return view('users.edit', compact('user'))->with('success', 'User ' . $user->id . ' updated');
-        }
-		else
-		{
-
-			return redirect()->back()->with('fail ', 'User ' . $user->id . ' fail update');
-		}
 		
+		$UserToBeUpdate = Http::get( 'https://reqres.in/api/users/' . $id );
+		
+		if($UserToBeUpdate == '{}' ) 
+		{
+            return redirect()->back()->with( 'success', ' No User Found' );
+        } 
+		else 
+		{
+			
+			$response = Http::put('https://reqres.in/api/users/' . $id, [
+				'first_name' => $request->first_name,
+				'last_name' => $request->last_name,
+				'email' => $request->email,
+			]);
+
+			if($response->successful()) 
+			{
+				$user = $response->object();
+				
+				$response = Http::get('https://reqres.in/api/users/' . $id);
+
+				$user = $response->object()->data;
+
+				return view('users.edit', compact('user'))->with('success', 'User ' . $user->id . ' updated');
+			}
+			else
+			{
+
+				return redirect()->back()->with('fail ', 'User ' . $user->id . ' fail update');
+			}
+		
+		}
     }
 
     /**
@@ -145,14 +163,21 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $responseDelete = Http::delete('https://reqres.in/api/users/' . $id);
+		$UserToBeDeleted = Http::get( 'https://reqres.in/api/users/' . $id );
 
-        $page = request('page');
-
-        $response = Http::get('https://reqres.in/api/users?page=' . $page);
-
-        $users = $response->object();
-
-        return view('users.index', compact('users'));
+        if ( $UserToBeDeleted == '{}' ) 
+		{
+            return redirect()->back()->with( 'success', ' No User Found' );
+        } 
+		else 
+		{
+            $userdeleted = Http::delete( 'https://reqres.in/api/users/' . $id );
+            $status = $userdeleted->status();
+            if ( $status == 204 ) {
+                return redirect()->back()->with( 'success', ' User Deleted' );
+            } else {
+                return redirect()->back()->with( 'success', 'There was an error please try again' );
+            }
+        }
     }
 }
